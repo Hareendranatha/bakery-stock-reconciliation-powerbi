@@ -1,0 +1,38 @@
+// Reference only: create each measure separately in Power BI Desktop.
+// Supplied process-note measures (formatting normalized).
+
+Transfer Out = SUM(Trans[out_qty])
+
+Net Branch In Qty =
+CALCULATE(
+    SUM('Append Transfer'[Qty]),
+    'Append Transfer'[In/Out] = "IN"
+)
+-
+CALCULATE(
+    SUM('Append Transfer'[Qty]),
+    'Append Transfer'[In/Out] = "Out"
+)
+
+Sale Qty = SUM(Sale[Qty])
+
+// Assumes MRN is already scoped to wastage with positive quantities.
+Wastage Qty = SUM('MRN'[QTY])
+
+// Derived from the equation in the notes; original standalone measure not supplied.
+Difference Qty = [Net Branch In Qty] - [Sale Qty] - [Wastage Qty]
+
+// Supplied measure. With a date range, shifts the entire selected date set.
+Yesterday Difference Qty =
+CALCULATE(
+    [Difference Qty],
+    DATEADD('Date'[Date], -1, DAY)
+)
+
+// Supplied formula. Two-day net, not cumulative unresolved stock.
+Final Difference Qty =
+[Net Branch In Qty] - [Sale Qty] - [Wastage Qty] + [Yesterday Difference Qty]
+
+// Proposed reference definition, inferred from the dashboard total.
+// Format as Percentage. A zero denominator returns BLANK.
+Wastage % = DIVIDE([Wastage Qty], [Sale Qty] + [Wastage Qty])
